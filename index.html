@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Generating MNIST with GAN</h1>
+        <p>Choose to generate with a seed or completely random values.</p>
+        <label>
+            <input id="useSeedCheckbox" type="checkbox">
+            Use seed
+        </label>
+        <input id="seedInput" type="number" placeholder="Enter seed (e.g. 42)" disabled>
+        <button id="generateButton">Generate</button>
+        <div id="grid" class="grid"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
