@@ -9,13 +9,41 @@
 </head>
 <body>
     <div class="container">
-        <h1>Generating MNIST with GAN</h1>
-        <p>Choose to generate with a seed or completely random values.</p>
-        <label>
+        <h1>Generative AI Model</h1>
+        <p>Choose your dataset, model, and whether to use a seed value.</p>
+
+        <!-- Dataset selection -->
+        <div class="form-group">
+            <label for="datasetSelect">Choose Dataset:</label>
+            <select id="datasetSelect">
+                <option value="mnist">MNIST</option>
+                <option value="fashion_mnist">Fashion MNIST</option>
+            </select>
+        </div>
+
+        <!-- Model selection -->
+        <div class="form-group">
+            <label for="modelSelect">Choose Model:</label>
+            <select id="modelSelect">
+                <option value="gan">GAN</option>
+            </select>
+        </div>
+
+        <!-- Batch size input -->
+        <div class="form-group">
+            <label for="batchSizeInput">Batch Size:</label>
+            <input id="batchSizeInput" type="number" placeholder="Enter batch size (e.g., 5)"
+                   min="1" max="45" value="32">
+        </div>
+
+        <!-- Seed input section -->
+        <div class="form-group checkbox-group">
             <input id="useSeedCheckbox" type="checkbox">
-            Use seed
-        </label>
-        <input id="seedInput" type="number" placeholder="Enter seed (e.g. 42)" disabled>
+            <label for="useSeedCheckbox">Use seed</label>
+            <input id="seedInput" type="number" placeholder="Enter seed (e.g. 42)" disabled>
+        </div>
+
+        <!-- Image generation -->
         <button id="generateButton">Generate</button>
         <div id="grid" class="grid"></div>
     </div>

@@ -19,10 +19,48 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-input, button {
-    padding: 10px;
-    margin: 10px;
+.form-group {
+    width: 100%;
+    margin-top: 20px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+select, input[type="number"], button {
+    padding: 12px;
+    margin: 10px 0;
     font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+button {
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.checkbox-group label {
+    white-space: nowrap;
+    margin-bottom: 0;
 }
 
 .grid {
