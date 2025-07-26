@@ -2,9 +2,74 @@ import torch
 import torch.onnx
 import torchvision
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
 
 DATA_PATH = '../data'
 
+
+def get_device():
+    device = 'cuda' if torch.cuda.is_available else 'cpu'
+    print(f'Using device: {device}')
+    return device
+
+
+def get_loader(dataset, x_dim, batch_size, normalize=True):
+    if normalize:
+        trans = torchvision.transforms.Compose([
+            torchvision.transforms.Resize((x_dim, x_dim)),
+            torchvision.transforms.ToTensor(),
+            torchvision.transforms.Normalize((0.5,), (0.5,))
+        ])
+    else:
+        trans = torchvision.transforms.Compose([
+            torchvision.transforms.Resize((x_dim, x_dim)),
+            torchvision.transforms.ToTensor()
+        ])
+    dataset = dataset(
+        root=DATA_PATH,
+        download=True,
+        transform=trans
+    )
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    print('Data loaded')
+    return dataloader
+
+
+def save_model(model, dummy_input, name):
+    torch.onnx.export(
+        model,
+        dummy_input,  # Latent space input (a dummy one, so that ONNX knows the shapes)
+        f"../Models/{name}.onnx",
+        input_names=["latent_vector"],
+        output_names=["generated_image"],
+        dynamic_axes={"latent_vector": {0: "batch_size"}, "generated_image": {0: "batch_size"}},
+        opset_version=11
+    )
+
+
+def get_n_params(model):
+    return sum(p.numel() for p in model.parameters())
+
+
+def plot_images(images, cnt=32, vmin=0, vmax=255, columns=6, height=2., width=2.):
+    rows = -(-len(images) // columns)
+    plt.figure(figsize=(columns * width, rows * height))
+    cmap = 'gray' if (images.ndim == 3 or images.shape[-1] == 1) else None
+    for i, image in enumerate(images[:cnt]):
+        plt.subplot(rows, columns, i + 1)
+        plt.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap)
+        plt.axis(False)
+    plt.show()
+
+
+def plot_real(dataloader, x_dim, cnt=32):
+    real_batch = next(iter(dataloader))[0].reshape(-1, x_dim, x_dim, 1)
+    vmin = -1 if real_batch.min() < 0 else 0
+    plot_images(real_batch, cnt=cnt, vmin=vmin, vmax=1, columns=16, height=1.2, width=1.2)
+
+
+# GAN
 
 def GAN_train(netD, netG, optimizerD, optimizerG, criterion, dataloader,
               epoch_num, x_dim, z_dim, viz_noise, device, fake_label=0, real_label=1,
@@ -36,7 +101,7 @@ def GAN_train(netD, netG, optimizerD, optimizerG, criterion, dataloader,
     for epoch in range(1, epoch_num + 1):
         for i, data in enumerate(dataloader, 0):
             # (1) Update the discriminator with real data
-            netD.zero_grad()
+            optimizerD.zero_grad()
             # Format batch
             real = data[0].to(device)
             b_size = real.size(0)
@@ -68,7 +133,7 @@ def GAN_train(netD, netG, optimizerD, optimizerG, criterion, dataloader,
             optimizerD.step()
 
             # (3) Update the generator with fake data
-            netG.zero_grad()
+            optimizerG.zero_grad()
             label.fill_(real_label)  # fake labels are real for generator cost
             # Since we just updated D, perform another forward pass of all-fake batch through D
             output = netD(fake)
@@ -91,75 +156,19 @@ def GAN_train(netD, netG, optimizerD, optimizerG, criterion, dataloader,
             load_checkpoint()
             continue
 
-        # Check how the generator is doing by saving G's output on fixed_noise
-        with torch.no_grad():
-            fake = netG(viz_noise).detach().cpu()
-
         # Every fifth epoch, plot fake images
         if epoch % 5 == 0:
+            with torch.no_grad():
+                fake = netG(viz_noise).detach().cpu()
             save_checkpoint(epoch)
             fake_batch = fake[:32].reshape(-1, x_dim, x_dim, 1)
             plot_images(fake_batch, vmin=-1, vmax=1, columns=16, height=1.2, width=1.2)
 
 
-def plot_images(images, cnt=32, vmin=0, vmax=255, columns=6, height=2., width=2.):
-    rows = -(-len(images) // columns)
-    plt.figure(figsize=(columns * width, rows * height))
-    cmap = 'gray' if (images.ndim == 3 or images.shape[-1] == 1) else None
-    for i, image in enumerate(images[:cnt]):
-        plt.subplot(rows, columns, i + 1)
-        plt.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap)
-        plt.axis(False)
-    plt.show()
-
-
-def get_device():
-    device = 'cuda' if torch.cuda.is_available else 'cpu'
-    print(f'Using device: {device}')
-    return device
-
-
-def get_loader(dataset, x_dim, batch_size):
-    dataset = dataset(
-        root=DATA_PATH,
-        download=True,
-        transform=torchvision.transforms.Compose([
-            torchvision.transforms.Resize((x_dim, x_dim)),
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Normalize((0.5,), (0.5,))
-        ])
-    )
-
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    print('Data loaded')
-    return dataloader
-
-
-def save_model(model, dummy_input, name):
-    torch.onnx.export(
-        model,
-        dummy_input,  # Latent space input (a dummy one, so that ONNX knows the shapes)
-        f"../Models/{name}.onnx",
-        input_names=["latent_vector"],
-        output_names=["generated_image"],
-        dynamic_axes={"latent_vector": {0: "batch_size"}, "generated_image": {0: "batch_size"}},
-        opset_version=11
-    )
-
-
-def plot_real(dataloader, x_dim, cnt=32):
-    real_batch = next(iter(dataloader))[0].reshape(-1, x_dim, x_dim, 1)
-    plot_images(real_batch, cnt=cnt, vmin=-1, vmax=1, columns=16, height=1.2, width=1.2)
-
-
-def plot_fake(generator, noise, x_dim, cnt=32):
+def gan_plot_fake(generator, noise, x_dim, cnt=32):
     with torch.no_grad():
         fake = generator(noise).detach().cpu()
 
     print("fake images")
     fake_batch = fake.reshape(-1, x_dim, x_dim, 1)
     plot_images(fake_batch, cnt=cnt, vmin=-1, vmax=1, columns=16, height=1.2, width=1.2)
-
-
-def get_n_params(model):
-    return sum(p.numel() for p in model.parameters())
