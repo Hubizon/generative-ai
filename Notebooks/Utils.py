@@ -69,6 +69,36 @@ def plot_real(dataloader, x_dim, cnt=32):
     plot_images(real_batch, cnt=cnt, vmin=vmin, vmax=1, columns=16, height=1.2, width=1.2)
 
 
+# VAE
+
+def VAE_train(netE, netD, optimizer, criterion, dataloader, epoch_num, device):
+    for epoch in range(1, epoch_num + 1):
+        for i, data in enumerate(dataloader, 0):
+            data = data[0].to(device)
+
+            z, mu, log_var = netE(data)
+            x_hat = netD(z)
+
+            loss = criterion(x_hat, data, mu, log_var)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        # Output training stats
+        print('[%d/%d][%d/%d]\tLoss: %.4f' % (epoch, epoch_num, i, len(dataloader), loss.item()))
+
+        # Every tenth epoch, plot fake images
+        if epoch % 25 == 0:
+            fake_batch = netD.generate(32).detach().cpu().reshape(-1, 28, 28, 1)
+            plot_images(fake_batch, vmin=0, vmax=1, columns=16, height=1.2, width=1.2)
+
+
+def vae_loss(reconstructed, original, mu, log_var):
+    recon_loss = F.binary_cross_entropy(reconstructed, original, reduction='sum')
+    kl_div = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return recon_loss + kl_div
+
+
 # GAN
 
 def GAN_train(netD, netG, optimizerD, optimizerG, criterion, dataloader,
