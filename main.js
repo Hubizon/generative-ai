@@ -21,7 +21,7 @@ modelSelect.addEventListener("change", () => {
     const model = modelSelect.value;
     const datasetOptions = {
         gan: ["mnist", "fashion_mnist"],
-        vae: ["mnist"]
+        vae: ["mnist", "fashion_mnist"]
     };
 
     const allowed = datasetOptions[model] || [];
@@ -103,6 +103,8 @@ async function generateImagesVAE() {
         let modelPath = "Models/";
         if (dataset === "mnist")
             modelPath += "VAE_MNIST.onnx";
+        else if (dataset === "fashion_mnist")
+            modelPath += "VAE_Fashion_MNIST2.onnx";
 
         const session = await ort.InferenceSession.create(modelPath);
 
