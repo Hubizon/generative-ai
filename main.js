@@ -104,7 +104,7 @@ async function generateImagesVAE() {
         if (dataset === "mnist")
             modelPath += "VAE_MNIST.onnx";
         else if (dataset === "fashion_mnist")
-            modelPath += "VAE_Fashion_MNIST2.onnx";
+            modelPath += "VAE_Fashion_MNIST.onnx";
 
         const session = await ort.InferenceSession.create(modelPath);
 
