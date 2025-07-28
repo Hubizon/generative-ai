@@ -9,16 +9,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Generative AI Model</h1>
+        <h1>Generate images</h1>
         <p>Choose your dataset, model, and whether to use a seed value.</p>
-
-        <!-- Dataset selection -->
-        <div class="form-group">
-            <label for="datasetSelect">Choose Dataset:</label>
-            <select id="datasetSelect">
-
-            </select>
-        </div>
 
         <!-- Model selection -->
         <div class="form-group">
@@ -26,6 +18,14 @@
             <select id="modelSelect">
                 <option value="vae">VAE</option>
                 <option value="gan">GAN</option>
+                <option value="cgan">cGAN</option>
+            </select>
+        </div>
+
+        <!-- Dataset selection -->
+        <div class="form-group">
+            <label for="datasetSelect">Choose Dataset:</label>
+            <select id="datasetSelect">
             </select>
         </div>
 
@@ -41,6 +41,13 @@
             <input id="useSeedCheckbox" type="checkbox">
             <label for="useSeedCheckbox">Use seed</label>
             <input id="seedInput" type="number" placeholder="Enter seed (e.g. 42)" disabled>
+        </div>
+
+        <!-- Class selection -->
+        <div class="form-group">
+            <label for="classSelect">Choose Class:</label>
+            <select id="classSelect" disabled>
+            </select>
         </div>
 
         <!-- Image generation -->
